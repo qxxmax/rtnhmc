@@ -1,0 +1,67 @@
+{
+ "run_dir": "/tmp/mq_94354/revision_code/results_sync/models/phi4_buffer/L12_k0.27_buf_s0",
+ "kappa": 0.27,
+ "L": 12,
+ "T": 16,
+ "n": 16384,
+ "R": 16,
+ "seed": 11,
+ "groups": 64,
+ "stages": {
+  "0": {
+   "cond_var": 2.4240007843312266,
+   "cond_var_jk": 0.027538395272418522,
+   "var_of_cond_mean": 69.37799115158101,
+   "var_of_cond_mean_jk": 3.0401819156763588,
+   "acc_pred": 0.27093631091262205,
+   "acc_pred_jk": 0.002722038589812505,
+   "n_pivots": 1024
+  },
+  "2": {
+   "cond_var": 2.122423924108521,
+   "cond_var_jk": 0.025840430770013204,
+   "var_of_cond_mean": 69.67405272659617,
+   "var_of_cond_mean_jk": 3.427046022834432,
+   "acc_pred": 0.30293892723086335,
+   "acc_pred_jk": 0.0029437819946355388,
+   "n_pivots": 1024
+  },
+  "4": {
+   "cond_var": 1.7681629181832668,
+   "cond_var_jk": 0.018973121566763437,
+   "var_of_cond_mean": 70.14811461890373,
+   "var_of_cond_mean_jk": 3.451978836575084,
+   "acc_pred": 0.34708623220745405,
+   "acc_pred_jk": 0.002586408667657031,
+   "n_pivots": 1024
+  },
+  "8": {
+   "cond_var": 1.160385912248159,
+   "cond_var_jk": 0.02067510198302466,
+   "var_of_cond_mean": 74.08412812189715,
+   "var_of_cond_mean_jk": 3.4790005038479506,
+   "acc_pred": 0.4462366982333901,
+   "acc_pred_jk": 0.004050956043641494,
+   "n_pivots": 1024
+  },
+  "12": {
+   "cond_var": 0.5671045406274112,
+   "cond_var_jk": 0.010001246338646698,
+   "var_of_cond_mean": 69.36783637832188,
+   "var_of_cond_mean_jk": 3.4216655205498285,
+   "acc_pred": 0.5943823292417818,
+   "acc_pred_jk": 0.0032516677747603936,
+   "n_pivots": 1024
+  },
+  "14": {
+   "cond_var": 0.2815732400618989,
+   "cond_var_jk": 0.005513288135439224,
+   "var_of_cond_mean": 78.19560657706717,
+   "var_of_cond_mean_jk": 3.61786958978789,
+   "acc_pred": 0.7075002545308209,
+   "acc_pred_jk": 0.002731955956132086,
+   "n_pivots": 1024
+  }
+ },
+ "note": "as tasks/wtail_var2.py + jackknife over pivot groups; acc_pred = erfc(sqrt(cond_var)/2)"
+}

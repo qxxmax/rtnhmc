@@ -1,0 +1,12 @@
+# checkpoints and run outputs (the notebook model goes to model/, downloaded from Zenodo)
+*.pt
+!model/*.pt
+*.ckpt.pt
+runs/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+tests/resume_test/
+code/baselines/cmcd_dbs/tests/resume_test/

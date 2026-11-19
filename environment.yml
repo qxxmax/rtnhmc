@@ -1,0 +1,15 @@
+# conda / mamba / micromamba environment for the round-trip NHMC code and notebook
+name: rtnhmc
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pytorch>=2.4
+  - numpy
+  - scipy
+  - matplotlib
+  - jupyterlab
+  - ipykernel
+  - nbformat
+  - nbconvert
+  - pytest

@@ -1,0 +1,18 @@
+{
+ "cmcd": {
+  "max_param_diff": 0.0,
+  "max_adam_state_diff": 0.0,
+  "hist_equal": true,
+  "final_equal": true,
+  "final_logZ": 11.828916453711525
+ },
+ "dbs": {
+  "max_param_diff": 0.0,
+  "max_adam_state_diff": 0.0,
+  "hist_equal": true,
+  "final_equal": true,
+  "final_logZ": 11.747585335228772
+ },
+ "device": "cpu",
+ "PASS": true
+}

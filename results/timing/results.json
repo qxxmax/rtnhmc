@@ -1,0 +1,2239 @@
+{
+ "job": {
+  "cluster": "HIMSTER3",
+  "job_id": 94496,
+  "node": "him0046",
+  "dir": "/lustre/him/him-mam/mqian/bench_timing_20261118",
+  "test_salloc": 94486
+ },
+ "device": {
+  "host_line": "host him0046 job 94496 cores 100,101,102,103 start 2026-11-18T16:22:05+00:00",
+  "cpu": "Intel(R) Xeon(R) 6972P",
+  "sockets": "2",
+  "cores_per_socket": "96",
+  "threads_per_core": "1",
+  "torch": "2.13.0+cu130",
+  "threads": 4,
+  "pinning": "taskset to 4 cores of an 80-core allocation; sequential runs",
+  "load_start": " 16:22:50 up 35 days,  3:14,  0 users,  load average: 19.55, 19.26, 19.48"
+ },
+ "method": "Collect the HIM timing benchmark (job 94496, out/main + out/repeat) into results.json and table_draft.md.\n\nTraining: train_log.csv of the unmodified training script with --log-interval 1 (samp_per_sec = 48 / epoch time).\nEpochs 1-10 are warm-up, epochs 11-60 are timed. Phase A: no buffer term (as epochs 1-1000 of a real run); phase B:\nbuffer term on from epoch 1 (as epochs 1001-20000); with --buffer-every 2 the even epochs also advance the 64 RT\nchains by one step, so B is reported per two-epoch cycle: (median even + median odd) / 2.\nSampling: bench_sample.py JSONs. Counts: exact from cond_kernels.CondNHMCResidual2Kernel / CondZ2Wrapper and\nphi4_gpu.fwd_partial / rev_partial (see COUNTS below).\n",
+ "configs": {
+  "nat_L4_T16": {
+   "L": 4,
+   "T": 16,
+   "V": 16,
+   "role": "native",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 1.0371907949447632,
+      "mean": 1.0392503595352174,
+      "sd": 0.011163155366072545,
+      "median_even": 1.0371923446655273,
+      "median_odd": 1.037001371383667,
+      "cycle": 1.0370968580245972
+     },
+     "B": {
+      "n": 50,
+      "median": 2.3976664543151855,
+      "mean": 2.4046154499053953,
+      "sd": 0.3124078767713875,
+      "median_even": 2.703143835067749,
+      "median_odd": 2.0959315299987793,
+      "cycle": 2.399537682533264
+     }
+    },
+    "train_20000_epochs_h_est": 12.952335211965773,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.14130815025418997,
+       "mean": 0.1413161148899235,
+       "sd": 0.0005068243972616977,
+       "q10": 0.1406573096755892,
+       "q90": 0.14200830799527467,
+       "total": 28.263222977984697
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 519
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.28222350496798754,
+       "mean": 0.28203016142360865,
+       "sd": 0.0016536970937534323,
+       "q10": 0.2798216743860394,
+       "q90": 0.28405869733542205,
+       "total": 56.40603228472173
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 511
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.07036970905028284,
+       "mean": 0.0703744587302208,
+       "sd": 0.00022226064196699484,
+       "q10": 0.07009454341605306,
+       "q90": 0.07067498844116926,
+       "total": 14.074891746044159
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 670
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.0019430790785008867,
+     "batch4_s_per_path": 0.03491257561836392,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 1.989712976384908,
+      "mean": 2.000724064745009,
+      "sd": 0.09099394977168938,
+      "q10": 1.916151080466807,
+      "q90": 2.091013619117439,
+      "total": 10.003620323725045
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "nat_L8_T16": {
+   "L": 8,
+   "T": 16,
+   "V": 64,
+   "role": "native",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 1.4442857503890991,
+      "mean": 1.4471245288848877,
+      "sd": 0.013531844836475685,
+      "median_even": 1.44285249710083,
+      "median_odd": 1.4456090927124023,
+      "cycle": 1.4442307949066162
+     },
+     "B": {
+      "n": 50,
+      "median": 3.444889187812805,
+      "mean": 3.4427986335754395,
+      "sd": 0.4345005285661659,
+      "median_even": 3.862260580062866,
+      "median_odd": 3.0042433738708496,
+      "cycle": 3.433251976966858
+     }
+    },
+    "train_20000_epochs_h_est": 18.5211314757665,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.16509668109938502,
+       "mean": 0.16514172852039338,
+       "sd": 0.0004464646940717285,
+       "q10": 0.16465514088049532,
+       "q90": 0.16561616444960237,
+       "total": 33.028345704078674
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 348
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.3248969679698348,
+       "mean": 0.32488775936886666,
+       "sd": 0.0008727446224089582,
+       "q10": 0.32387866023927925,
+       "q90": 0.32571966350078585,
+       "total": 64.97755187377334
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 352
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.08127961889840662,
+       "mean": 0.08130689451936632,
+       "sd": 0.00023795649770201043,
+       "q10": 0.08103861818090081,
+       "q90": 0.08158642519265413,
+       "total": 16.261378903873265
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 550
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.004207013434552209,
+     "batch4_s_per_path": 0.04041053191758692,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 4.307981756981462,
+      "mean": 4.319339907541871,
+      "sd": 0.17027182599725407,
+      "q10": 4.146602203138173,
+      "q90": 4.486856485530734,
+      "total": 21.596699537709355
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   },
+   "repeat": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 1.4234392642974854,
+      "mean": 1.4249687051773072,
+      "sd": 0.009322760151361291,
+      "median_even": 1.4246108531951904,
+      "median_odd": 1.4231884479522705,
+      "cycle": 1.4238996505737305
+     },
+     "B": {
+      "n": 50,
+      "median": 3.403227210044861,
+      "mean": 3.4121460199356077,
+      "sd": 0.4343126273018769,
+      "median_even": 3.835326671600342,
+      "median_odd": 2.983878135681152,
+      "cycle": 3.409602403640747
+     }
+    },
+    "train_20000_epochs_h_est": 18.390523592631023,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.15656382218003273,
+       "mean": 0.15658279753290116,
+       "sd": 0.00038245998335337624,
+       "q10": 0.15605765706859528,
+       "q90": 0.15710035911761225,
+       "total": 31.316559506580234
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 348
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.30811761296354234,
+       "mean": 0.30811753826681526,
+       "sd": 0.0004580848786837513,
+       "q10": 0.3075178508181125,
+       "q90": 0.30870772060006857,
+       "total": 61.62350765336305
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 352
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.07741363323293626,
+       "mean": 0.07740434309700504,
+       "sd": 0.00016091697495712725,
+       "q10": 0.07720994502305985,
+       "q90": 0.07759539452381432,
+       "total": 15.480868619401008
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 550
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.003671500667678629,
+     "batch4_s_per_path": 0.03852155909407884,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 3.759616683702916,
+      "mean": 3.69139637183398,
+      "sd": 0.25491282038712815,
+      "q10": 3.4295283635146916,
+      "q90": 3.880167346075177,
+      "total": 18.4569818591699
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "nat_L12_T16": {
+   "L": 12,
+   "T": 16,
+   "V": 144,
+   "role": "native",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 2.191347599029541,
+      "mean": 2.188363342285156,
+      "sd": 0.019835132742988735,
+      "median_even": 2.1947052478790283,
+      "median_odd": 2.1859569549560547,
+      "cycle": 2.1903311014175415
+     },
+     "B": {
+      "n": 50,
+      "median": 5.1344687938690186,
+      "mean": 5.143831872940064,
+      "sd": 0.6696403537391612,
+      "median_even": 5.799059867858886,
+      "median_odd": 4.475975513458252,
+      "cycle": 5.137517690658569
+     }
+    },
+    "train_20000_epochs_h_est": 27.7233843670951,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.18279623799026012,
+       "mean": 0.18284832363948225,
+       "sd": 0.0006225182861138806,
+       "q10": 0.18234184198081493,
+       "q90": 0.18324105483479797,
+       "total": 36.56966472789645
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 261
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.36272795870900154,
+       "mean": 0.3625854852888733,
+       "sd": 0.0008774028408603213,
+       "q10": 0.36137311784550546,
+       "q90": 0.3635845857206732,
+       "total": 72.51709705777466
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 208
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.09071468375623226,
+       "mean": 0.09074293459067122,
+       "sd": 0.00026622498264766833,
+       "q10": 0.09047465971671045,
+       "q90": 0.09099023719318211,
+       "total": 18.148586918134242
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 488
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.008287508735065785,
+     "batch4_s_per_path": 0.0451426884974353,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 8.486408944707364,
+      "mean": 8.519075229391456,
+      "sd": 0.10864053438301,
+      "q10": 8.422817412856967,
+      "q90": 8.637085573282093,
+      "total": 42.59537614695728
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "nat_L16_T16": {
+   "L": 16,
+   "T": 16,
+   "V": 256,
+   "role": "native",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 2.9174125194549565,
+      "mean": 2.9177832126617433,
+      "sd": 0.017883717705706244,
+      "median_even": 2.919647455215454,
+      "median_odd": 2.914337396621704,
+      "cycle": 2.916992425918579
+     },
+     "B": {
+      "n": 50,
+      "median": 7.289048194885254,
+      "mean": 7.263487839698792,
+      "sd": 0.8595842692168949,
+      "median_even": 8.115753650665283,
+      "median_odd": 6.400831937789917,
+      "cycle": 7.2582927942276
+     }
+    },
+    "train_20000_epochs_h_est": 39.11804878049426,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.21271653333678842,
+       "mean": 0.2128402752801776,
+       "sd": 0.0010108644444465063,
+       "q10": 0.2119273508898914,
+       "q90": 0.21405203323811292,
+       "total": 42.56805505603552
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 165
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.4272449144627899,
+       "mean": 0.4271940581547096,
+       "sd": 0.0013398632108975615,
+       "q10": 0.42547705499455335,
+       "q90": 0.4289534586947411,
+       "total": 85.43881163094193
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 108
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.10635430342517793,
+       "mean": 0.1060231124679558,
+       "sd": 0.0010280630980834505,
+       "q10": 0.104087679926306,
+       "q90": 0.10670096818357706,
+       "total": 21.20462249359116
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 368
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.01164146788596554,
+     "batch4_s_per_path": 0.051617802877444774,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 11.920863115228713,
+      "mean": 11.9448426281102,
+      "sd": 0.09557487506057276,
+      "q10": 11.865366188343614,
+      "q90": 12.044152596965432,
+      "total": 59.724213140551
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   },
+   "repeat": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 2.881371259689331,
+      "mean": 2.8814868450164797,
+      "sd": 0.014706528977393458,
+      "median_even": 2.8817043304443355,
+      "median_odd": 2.8811392784118652,
+      "cycle": 2.8814218044281006
+     },
+     "B": {
+      "n": 50,
+      "median": 7.164629936218262,
+      "mean": 7.177964997291565,
+      "sd": 0.8605621705629309,
+      "median_even": 8.036217212677002,
+      "median_odd": 6.351207971572876,
+      "cycle": 7.193712592124939
+     }
+    },
+    "train_20000_epochs_h_est": 38.76719736390643,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.21347962715663016,
+       "mean": 0.21348991740262135,
+       "sd": 0.0003445649754243403,
+       "q10": 0.21304084691219033,
+       "q90": 0.21394499400630593,
+       "total": 42.69798348052427
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 165
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.4203136044088751,
+       "mean": 0.42033578944858163,
+       "sd": 0.0004518046231847914,
+       "q10": 0.41978124910965564,
+       "q90": 0.42086746017448606,
+       "total": 84.06715788971633
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 108
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.10524331708438694,
+       "mean": 0.10524000083096326,
+       "sd": 0.0001773083247443553,
+       "q10": 0.10501319635659456,
+       "q90": 0.1054505645763129,
+       "total": 21.04800016619265
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 368
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.010547084422796615,
+     "batch4_s_per_path": 0.05238054704386741,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 10.800214448943734,
+      "mean": 10.80011583827436,
+      "sd": 0.050490136517407525,
+      "q10": 10.747903194557875,
+      "q90": 10.849635345116258,
+      "total": 54.0005791913718
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L8_T4": {
+   "L": 8,
+   "T": 4,
+   "V": 64,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 0.3360886573791504,
+      "mean": 0.3361411666870117,
+      "sd": 0.001379123616464921,
+      "median_even": 0.3359386920928955,
+      "median_odd": 0.33622169494628906,
+      "cycle": 0.3360801935195923
+     },
+     "B": {
+      "n": 50,
+      "median": 0.806450605392456,
+      "mean": 0.777408037185669,
+      "sd": 0.09693922412489468,
+      "median_even": 0.8736281394958496,
+      "median_odd": 0.6795003414154053,
+      "cycle": 0.7765642404556274
+     }
+    },
+    "train_20000_epochs_h_est": 4.191891451676686,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.03980388608761132,
+       "mean": 0.039803403459955006,
+       "sd": 0.00012148591149883154,
+       "q10": 0.03964837864041328,
+       "q90": 0.039974661031737926,
+       "total": 7.960680691991001
+      },
+      "counts": {
+       "stages": 4,
+       "grad_S": 24,
+       "learned_force_net": 24,
+       "momentum_nets": 16,
+       "drifts": 20,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 155
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.07915578945539892,
+       "mean": 0.07916242172010243,
+       "sd": 0.0001767341237934394,
+       "q10": 0.07895948155783117,
+       "q90": 0.07940577086992562,
+       "total": 15.832484344020486
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 181
+     },
+     "prt_dT4": {
+      "key": "rtp3",
+      "s": 3,
+      "depth": 1,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.020089109195396304,
+       "mean": 0.020078694566618652,
+       "sd": 8.881335143266771e-05,
+       "q10": 0.019956648442894222,
+       "q90": 0.020188591722398997,
+       "total": 4.01573891332373
+      },
+      "counts": {
+       "stages": 2,
+       "grad_S": 12,
+       "learned_force_net": 12,
+       "momentum_nets": 8,
+       "drifts": 10,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 418
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.0010196887033089297,
+     "batch4_s_per_path": 0.00979186047334224,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 1.044161232188344,
+      "mean": 1.039774702861905,
+      "sd": 0.01952651999415862,
+      "q10": 1.019012088049203,
+      "q90": 1.0585057958029211,
+      "total": 5.1988735143095255
+     },
+     "counts": {
+      "stages": 4,
+      "grad_S": 24,
+      "learned_force_net": 24,
+      "momentum_nets": 16,
+      "drifts": 20,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L8_T8": {
+   "L": 8,
+   "T": 8,
+   "V": 64,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 0.6924341917037964,
+      "mean": 0.6938425016403198,
+      "sd": 0.010015289108232663,
+      "median_even": 0.692347526550293,
+      "median_odd": 0.692697286605835,
+      "cycle": 0.692522406578064
+     },
+     "B": {
+      "n": 50,
+      "median": 1.641140103340149,
+      "mean": 1.6457139110565187,
+      "sd": 0.21186144870613408,
+      "median_even": 1.8517796993255615,
+      "median_odd": 1.4366135597229004,
+      "cycle": 1.644196629524231
+     }
+    },
+    "train_20000_epochs_h_est": 8.87004726462894,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.08330975170247257,
+       "mean": 0.08329878149786964,
+       "sd": 0.00024748160642503684,
+       "q10": 0.08298169323243201,
+       "q90": 0.0836025456432253,
+       "total": 16.659756299573928
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 170
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.16498514218255877,
+       "mean": 0.1650179532240145,
+       "sd": 0.0003650853068948593,
+       "q10": 0.16461072582751513,
+       "q90": 0.16546982345171274,
+       "total": 33.0035906448029
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 263
+     },
+     "prt_dT4": {
+      "key": "rtp6",
+      "s": 6,
+      "depth": 2,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.041532625211402774,
+       "mean": 0.04153371733147651,
+       "sd": 0.00014699883433566744,
+       "q10": 0.04133403627201915,
+       "q90": 0.04172643614001572,
+       "total": 8.306743466295302
+      },
+      "counts": {
+       "stages": 4,
+       "grad_S": 24,
+       "learned_force_net": 24,
+       "momentum_nets": 16,
+       "drifts": 20,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 499
+     },
+     "prt_d4": {
+      "key": "rtp4",
+      "s": 4,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.0824442901648581,
+       "mean": 0.08245416748104617,
+       "sd": 0.0002219708534664047,
+       "q10": 0.08220420894213021,
+       "q90": 0.08275244669057429,
+       "total": 16.490833496209234
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 368
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.001985087471894076,
+     "batch4_s_per_path": 0.020578329626005143,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 2.0327295712195337,
+      "mean": 1.9566426835022868,
+      "sd": 0.18349042914494249,
+      "q10": 1.7819282932206988,
+      "q90": 2.0584644015878437,
+      "total": 9.783213417511433
+     },
+     "counts": {
+      "stages": 8,
+      "grad_S": 48,
+      "learned_force_net": 48,
+      "momentum_nets": 32,
+      "drifts": 40,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L8_T16": {
+   "L": 8,
+   "T": 16,
+   "V": 64,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 1.4542343616485596,
+      "mean": 1.455853180885315,
+      "sd": 0.011132222304040746,
+      "median_even": 1.4560458660125732,
+      "median_odd": 1.4535644054412842,
+      "cycle": 1.4548051357269287
+     },
+     "B": {
+      "n": 50,
+      "median": 3.4456958770751953,
+      "mean": 3.4503009605407713,
+      "sd": 0.4402138647877052,
+      "median_even": 3.8864223957061768,
+      "median_odd": 3.013140916824341,
+      "cycle": 3.449781656265259
+     }
+    },
+    "train_20000_epochs_h_est": 18.61113495296902,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.1574364264961332,
+       "mean": 0.1574612136487849,
+       "sd": 0.00038122287932224606,
+       "q10": 0.15696879513561726,
+       "q90": 0.1579518338199705,
+       "total": 31.49224272975698
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 360
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.31088902545161545,
+       "mean": 0.31085996228037405,
+       "sd": 0.00042361836824286015,
+       "q10": 0.31034598145633935,
+       "q90": 0.31141528794541956,
+       "total": 62.171992456074804
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 356
+     },
+     "prt_d4=dT4": {
+      "key": "rtp12",
+      "s": 12,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.07804126385599375,
+       "mean": 0.07805510631296783,
+       "sd": 0.00019149827328833322,
+       "q10": 0.07781269284896553,
+       "q90": 0.0783482133410871,
+       "total": 15.611021262593567
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 572
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.004076459399584564,
+     "batch4_s_per_path": 0.0389378018444404,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 4.174294425174594,
+      "mean": 4.137137670628727,
+      "sd": 0.1698144288041186,
+      "q10": 3.973614201322198,
+      "q90": 4.259835415985435,
+      "total": 20.685688353143632
+     },
+     "counts": {
+      "stages": 16,
+      "grad_S": 96,
+      "learned_force_net": 96,
+      "momentum_nets": 64,
+      "drifts": 80,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L8_T32": {
+   "L": 8,
+   "T": 32,
+   "V": 64,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 3.132456421852112,
+      "mean": 3.1333144903182983,
+      "sd": 0.019022398583204966,
+      "median_even": 3.132038116455078,
+      "median_odd": 3.1328747272491455,
+      "cycle": 3.132456421852112
+     },
+     "B": {
+      "n": 50,
+      "median": 7.745038866996765,
+      "mean": 7.762934861183166,
+      "sd": 0.967514400562378,
+      "median_even": 8.723082780838013,
+      "median_odd": 6.810898542404175,
+      "cycle": 7.766990661621094
+     }
+    },
+    "train_20000_epochs_h_est": 41.86257749795914,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.3129498790949583,
+       "mean": 0.31278668594779446,
+       "sd": 0.000999690833934057,
+       "q10": 0.31149873277172446,
+       "q90": 0.3139393132645637,
+       "total": 62.55733718955889
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 495
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.6159698374103755,
+       "mean": 0.6159606848657131,
+       "sd": 0.0010746034529815892,
+       "q10": 0.6146355730015785,
+       "q90": 0.6171899606473744,
+       "total": 123.19213697314262
+      },
+      "counts": {
+       "stages": 64,
+       "grad_S": 384,
+       "learned_force_net": 384,
+       "momentum_nets": 256,
+       "drifts": 320,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 451
+     },
+     "prt_dT4": {
+      "key": "rtp24",
+      "s": 24,
+      "depth": 8,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.15481937117874622,
+       "mean": 0.15480184031883254,
+       "sd": 0.0003211077060349622,
+       "q10": 0.15444571045227348,
+       "q90": 0.1551971511915326,
+       "total": 30.96036806376651
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 636
+     },
+     "prt_d4": {
+      "key": "rtp28",
+      "s": 28,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.07744824793189764,
+       "mean": 0.07743680364917964,
+       "sd": 0.00024354703681465085,
+       "q10": 0.07709782533347606,
+       "q90": 0.07772129885852337,
+       "total": 15.487360729835927
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 678
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.008431686446328968,
+     "batch4_s_per_path": 0.0774360413197428,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 8.634046921040863,
+      "mean": 8.571142553165554,
+      "sd": 0.16669249854703366,
+      "q10": 8.394309342466295,
+      "q90": 8.70175758888945,
+      "total": 42.855712765827775
+     },
+     "counts": {
+      "stages": 32,
+      "grad_S": 192,
+      "learned_force_net": 192,
+      "momentum_nets": 128,
+      "drifts": 160,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L8_T64": {
+   "L": 8,
+   "T": 64,
+   "V": 64,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 7.2978835105896,
+      "mean": 7.296576132774353,
+      "sd": 0.06754514064398831,
+      "median_even": 7.290307283401489,
+      "median_odd": 7.306715250015259,
+      "cycle": 7.298511266708374
+     },
+     "B": {
+      "n": 50,
+      "median": 18.278785943984985,
+      "mean": 18.519805006980896,
+      "sd": 2.2917949679736838,
+      "median_even": 20.801260232925415,
+      "median_odd": 16.238277912139893,
+      "cycle": 18.519769072532654
+     }
+    },
+    "train_20000_epochs_h_est": 99.77041552464168,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.6509790979325771,
+       "mean": 0.6509352342761122,
+       "sd": 0.001424905428879041,
+       "q10": 0.6491527802310884,
+       "q90": 0.6524180732667446,
+       "total": 130.18704685522243
+      },
+      "counts": {
+       "stages": 64,
+       "grad_S": 384,
+       "learned_force_net": 384,
+       "momentum_nets": 256,
+       "drifts": 320,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 440
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 1.2807266081217676,
+       "mean": 1.2805116957682185,
+       "sd": 0.001572196538737823,
+       "q10": 1.2787982851732522,
+       "q90": 1.2821691028308124,
+       "total": 256.1023391536437
+      },
+      "counts": {
+       "stages": 128,
+       "grad_S": 768,
+       "learned_force_net": 768,
+       "momentum_nets": 512,
+       "drifts": 640,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 478
+     },
+     "prt_dT4": {
+      "key": "rtp48",
+      "s": 48,
+      "depth": 16,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.32074147346429527,
+       "mean": 0.3207840173947625,
+       "sd": 0.0005523995020766183,
+       "q10": 0.32014196873642503,
+       "q90": 0.3214544683229178,
+       "total": 64.1568034789525
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 603
+     },
+     "prt_d4": {
+      "key": "rtp60",
+      "s": 60,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.0806562325451523,
+       "mean": 0.080643984999042,
+       "sd": 0.00021730997227878272,
+       "q10": 0.08037464474327863,
+       "q90": 0.0809159608092159,
+       "total": 16.1287969998084
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 697
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.015180714394773531,
+     "batch4_s_per_path": 0.15997984941350296,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 15.545051540248096,
+      "mean": 13.539485782664268,
+      "sd": 2.8251162394845912,
+      "q10": 10.435222997609525,
+      "q90": 15.6417357605882,
+      "total": 67.69742891332135
+     },
+     "counts": {
+      "stages": 64,
+      "grad_S": 384,
+      "learned_force_net": 384,
+      "momentum_nets": 256,
+      "drifts": 320,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L16_T8": {
+   "L": 16,
+   "T": 8,
+   "V": 256,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 1.3732885122299194,
+      "mean": 1.3742158174514771,
+      "sd": 0.010500385239843752,
+      "median_even": 1.373553991317749,
+      "median_odd": 1.3731553554534912,
+      "cycle": 1.3733546733856201
+     },
+     "B": {
+      "n": 50,
+      "median": 3.2464102506637573,
+      "mean": 3.2431972789764405,
+      "sd": 0.40196991935790966,
+      "median_even": 3.6387937068939213,
+      "median_odd": 2.847781419754028,
+      "cycle": 3.2432875633239746
+     }
+    },
+    "train_20000_epochs_h_est": 17.49882005982929,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.11191319907084107,
+       "mean": 0.11191730833612383,
+       "sd": 0.000230401582108823,
+       "q10": 0.1116464039310813,
+       "q90": 0.11221205471083522,
+       "total": 22.383461667224765
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 56
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.2232954390347004,
+       "mean": 0.22325858244206756,
+       "sd": 0.00041941260215391216,
+       "q10": 0.22270693820901216,
+       "q90": 0.2237931402400136,
+       "total": 44.65171648841351
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 50
+     },
+     "prt_dT4": {
+      "key": "rtp6",
+      "s": 6,
+      "depth": 2,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.05614192271605134,
+       "mean": 0.05614288454176858,
+       "sd": 0.0001390764339589785,
+       "q10": 0.05597573942504823,
+       "q90": 0.05632966058328748,
+       "total": 11.228576908353716
+      },
+      "counts": {
+       "stages": 4,
+       "grad_S": 24,
+       "learned_force_net": 24,
+       "momentum_nets": 16,
+       "drifts": 20,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 298
+     },
+     "prt_d4": {
+      "key": "rtp4",
+      "s": 4,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.11144347605295479,
+       "mean": 0.11149895932059735,
+       "sd": 0.0003157117321101995,
+       "q10": 0.11110758190043271,
+       "q90": 0.11196905481629074,
+       "total": 22.29979186411947
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 99
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.005559834835821675,
+     "batch4_s_per_path": 0.02778644033242017,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 5.693270871881396,
+      "mean": 5.694808122422546,
+      "sd": 0.03374677294576932,
+      "q10": 5.66195233585313,
+      "q90": 5.728168955445289,
+      "total": 28.47404061211273
+     },
+     "counts": {
+      "stages": 8,
+      "grad_S": 48,
+      "learned_force_net": 48,
+      "momentum_nets": 32,
+      "drifts": 40,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L16_T32": {
+   "L": 16,
+   "T": 32,
+   "V": 256,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 6.782885432243347,
+      "mean": 6.789429106712341,
+      "sd": 0.06000765962023851,
+      "median_even": 6.79610538482666,
+      "median_odd": 6.779404401779175,
+      "cycle": 6.7877548933029175
+     },
+     "B": {
+      "n": 50,
+      "median": 17.738017320632935,
+      "mean": 17.75593002319336,
+      "sd": 2.095630886875499,
+      "median_even": 19.852637767791748,
+      "median_odd": 15.672452926635742,
+      "cycle": 17.762545347213745
+     }
+    },
+    "train_20000_epochs_h_est": 95.63090195258458,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.43566346913576126,
+       "mean": 0.4357299414766021,
+       "sd": 0.00048086123776601333,
+       "q10": 0.43514839792624116,
+       "q90": 0.4363456405699253,
+       "total": 87.14598829532042
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 195
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.8728295352775604,
+       "mean": 0.8732523727067746,
+       "sd": 0.002203100966553338,
+       "q10": 0.8707501797005535,
+       "q90": 0.8759562585037202,
+       "total": 174.65047454135492
+      },
+      "counts": {
+       "stages": 64,
+       "grad_S": 384,
+       "learned_force_net": 384,
+       "momentum_nets": 256,
+       "drifts": 320,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 200
+     },
+     "prt_dT4": {
+      "key": "rtp24",
+      "s": 24,
+      "depth": 8,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.21770523395389318,
+       "mean": 0.21782101565040649,
+       "sd": 0.0006799178458914533,
+       "q10": 0.21710880459286272,
+       "q90": 0.2187384006101638,
+       "total": 43.564203130081296
+      },
+      "counts": {
+       "stages": 16,
+       "grad_S": 96,
+       "learned_force_net": 96,
+       "momentum_nets": 64,
+       "drifts": 80,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 470
+     },
+     "prt_d4": {
+      "key": "rtp28",
+      "s": 28,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.10913072829134762,
+       "mean": 0.10917442525271326,
+       "sd": 0.00038531344328881383,
+       "q10": 0.10872633387334645,
+       "q90": 0.10969124534167349,
+       "total": 21.834885050542653
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 537
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.021300475894349802,
+     "batch4_s_per_path": 0.10863088112091646,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 21.811687315814197,
+      "mean": 21.93365898709744,
+      "sd": 0.3669472002378596,
+      "q10": 21.70361639773473,
+      "q90": 22.29133883100003,
+      "total": 109.66829493548721
+     },
+     "counts": {
+      "stages": 32,
+      "grad_S": 192,
+      "learned_force_net": 192,
+      "momentum_nets": 128,
+      "drifts": 160,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  },
+  "ks_L16_T64": {
+   "L": 16,
+   "T": 64,
+   "V": 256,
+   "role": "Tscan",
+   "n_leapfrog": 5,
+   "kappa": 0.27,
+   "main": {
+    "train": {
+     "A": {
+      "n": 50,
+      "median": 16.48227322101593,
+      "mean": 16.51278645992279,
+      "sd": 0.22625699433655172,
+      "median_even": 16.47941780090332,
+      "median_odd": 16.486637592315674,
+      "cycle": 16.483027696609497
+     },
+     "B": {
+      "n": 50,
+      "median": 45.68268406391144,
+      "mean": 45.90094732284546,
+      "sd": 5.32664392141083,
+      "median_even": 51.27840709686279,
+      "median_odd": 40.651816844940186,
+      "cycle": 45.96511197090149
+     }
+    },
+    "train_20000_epochs_h_est": 247.17205574115118,
+    "sampling": {
+     "imh": {
+      "key": "imh",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.8476912975311279,
+       "mean": 0.8453836512751878,
+       "sd": 0.005770450651560048,
+       "q10": 0.8334043683484197,
+       "q90": 0.849648421490565,
+       "total": 169.07673025503755
+      },
+      "counts": {
+       "stages": 64,
+       "grad_S": 384,
+       "learned_force_net": 384,
+       "momentum_nets": 256,
+       "drifts": 320,
+       "action_S": 1,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 276
+     },
+     "rt": {
+      "key": "rt",
+      "s": 0,
+      "depth": null,
+      "sec_per_update": {
+       "n": 200,
+       "median": 1.6161814250517637,
+       "mean": 1.616377167988103,
+       "sd": 0.001433921554129996,
+       "q10": 1.614787911530584,
+       "q90": 1.6181443143170327,
+       "total": 323.2754335976206
+      },
+      "counts": {
+       "stages": 128,
+       "grad_S": 768,
+       "learned_force_net": 768,
+       "momentum_nets": 512,
+       "drifts": 640,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 339
+     },
+     "prt_dT4": {
+      "key": "rtp48",
+      "s": 48,
+      "depth": 16,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.4037593856919557,
+       "mean": 0.40374958476051687,
+       "sd": 0.00039273413806140367,
+       "q10": 0.40324401124380527,
+       "q90": 0.4042271615471691,
+       "total": 80.74991695210338
+      },
+      "counts": {
+       "stages": 32,
+       "grad_S": 192,
+       "learned_force_net": 192,
+       "momentum_nets": 128,
+       "drifts": 160,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 560
+     },
+     "prt_d4": {
+      "key": "rtp60",
+      "s": 60,
+      "depth": 4,
+      "sec_per_update": {
+       "n": 200,
+       "median": 0.10153502156026661,
+       "mean": 0.10152221755357459,
+       "sd": 0.0001898722716992963,
+       "q10": 0.10127471410669386,
+       "q90": 0.10176457231864333,
+       "total": 20.30444351071492
+      },
+      "counts": {
+       "stages": 8,
+       "grad_S": 48,
+       "learned_force_net": 48,
+       "momentum_nets": 32,
+       "drifts": 40,
+       "action_S": 2,
+       "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+      },
+      "accepted_in_timed": 675
+     }
+    },
+    "forward_path": {
+     "batch1024_s_per_path": 0.04227669990268623,
+     "batch4_s_per_path": 0.20186146174091846,
+     "batch1024_calls": {
+      "n": 5,
+      "median": 43.2913407003507,
+      "mean": 43.32493856148794,
+      "sd": 0.2199621620162609,
+      "q10": 43.10659267148003,
+      "q90": 43.550815591122955,
+      "total": 216.62469280743971
+     },
+     "counts": {
+      "stages": 64,
+      "grad_S": 384,
+      "learned_force_net": 384,
+      "momentum_nets": 256,
+      "drifts": 320,
+      "action_S": 1,
+      "note": "plus 3 observable evaluations per update (x, y, new state), each with one action S"
+     }
+    },
+    "affinity": [
+     100,
+     101,
+     102,
+     103
+    ]
+   }
+  }
+ },
+ "series": {
+  "vs_T_L8": {
+   "imh": {
+    "T": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.03980388608761132,
+     0.08330975170247257,
+     0.1574364264961332,
+     0.3129498790949583,
+     0.6509790979325771
+    ]
+   },
+   "rt": {
+    "T": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.07915578945539892,
+     0.16498514218255877,
+     0.31088902545161545,
+     0.6159698374103755,
+     1.2807266081217676
+    ]
+   },
+   "prt_dT4": {
+    "T": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.020089109195396304,
+     0.041532625211402774,
+     0.07804126385599375,
+     0.15481937117874622,
+     0.32074147346429527
+    ]
+   },
+   "prt_d4": {
+    "T": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.07915578945539892,
+     0.0824442901648581,
+     0.07804126385599375,
+     0.07744824793189764,
+     0.0806562325451523
+    ]
+   },
+   "forward_path_batch1024": {
+    "T": [
+     4,
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.0010196887033089297,
+     0.001985087471894076,
+     0.004076459399584564,
+     0.008431686446328968,
+     0.015180714394773531
+    ]
+   }
+  },
+  "vs_T_L16": {
+   "imh": {
+    "T": [
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.11191319907084107,
+     0.21271653333678842,
+     0.43566346913576126,
+     0.8476912975311279
+    ]
+   },
+   "rt": {
+    "T": [
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.2232954390347004,
+     0.4272449144627899,
+     0.8728295352775604,
+     1.6161814250517637
+    ]
+   },
+   "prt_dT4": {
+    "T": [
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.05614192271605134,
+     0.10635430342517793,
+     0.21770523395389318,
+     0.4037593856919557
+    ]
+   },
+   "prt_d4": {
+    "T": [
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.11144347605295479,
+     0.10635430342517793,
+     0.10913072829134762,
+     0.10153502156026661
+    ]
+   },
+   "forward_path_batch1024": {
+    "T": [
+     8,
+     16,
+     32,
+     64
+    ],
+    "sec": [
+     0.005559834835821675,
+     0.01164146788596554,
+     0.021300475894349802,
+     0.04227669990268623
+    ]
+   }
+  },
+  "vs_V_T16": {
+   "imh": {
+    "V": [
+     16,
+     64,
+     144,
+     256
+    ],
+    "sec": [
+     0.14130815025418997,
+     0.16509668109938502,
+     0.18279623799026012,
+     0.21271653333678842
+    ]
+   },
+   "rt": {
+    "V": [
+     16,
+     64,
+     144,
+     256
+    ],
+    "sec": [
+     0.28222350496798754,
+     0.3248969679698348,
+     0.36272795870900154,
+     0.4272449144627899
+    ]
+   },
+   "prt_dT4": {
+    "V": [
+     16,
+     64,
+     144,
+     256
+    ],
+    "sec": [
+     0.07036970905028284,
+     0.08127961889840662,
+     0.09071468375623226,
+     0.10635430342517793
+    ]
+   },
+   "forward_path_batch1024": {
+    "V": [
+     16,
+     64,
+     144,
+     256
+    ],
+    "sec": [
+     0.0019430790785008867,
+     0.004207013434552209,
+     0.008287508735065785,
+     0.01164146788596554
+    ]
+   }
+  },
+  "note": "L16 T16 in vs_T_L16 is the native L16 model (the paper T-scan uses it); ks_L8_T16 is the separately trained K-scan model (same architecture as nat_L8_T16). prt_dT4 and prt_d4 coincide at T = 16; at T = 4 prt_d4 is the full RT (rt value repeated)."
+ },
+ "definitions": {
+  "update": "one transition of 4 chains held in one batched tensor (longchain.py step loop); s/update is the median over 200 timed updates after 20 warm-up updates",
+  "forward_path": "PhiStepper.start = base draw + T forward stages + action; s per path at batch 1024 (SNIS / pre-generated path-IMH proposals) and at batch 4",
+  "prt_d_T4": "pRT with return depth d = T/4 (s = 3T/4)",
+  "prt_d4": "pRT with fixed return depth d = 4 (s = T - 4); at T = 16 both are s = 12 (paper); at T = 4, d = 4 is the full RT",
+  "train_epoch": "s per epoch, batch 48, median of epochs 11-60; A = before the buffer term (epochs 1-1000 of a run), B = buffer phase per two-epoch cycle (epochs 1001-20000)"
+ },
+ "training_logs_note": {
+  "file": "train_log_wall.json",
+  "caveat": "devices differ (iqcb: shared L40S GPU; HIM: CPU, 4 or 16 threads); samp_per_sec is logged at epochs that are multiples of 200, which are even epochs and therefore always include the buffer RT step: the sum over segments overestimates the buffer phase; eval_log wall_sec is the wall time since the last (re)start"
+ }
+}

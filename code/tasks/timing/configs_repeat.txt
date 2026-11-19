@@ -1,0 +1,3 @@
+# repeat at the end of the job (drift check)
+nat_L8_T16 8 16 12 kernel_final.pt
+nat_L16_T16 16 16 12 kernel_final.pt

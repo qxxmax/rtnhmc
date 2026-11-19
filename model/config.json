@@ -1,0 +1,34 @@
+{
+  "kernel": "nhmc_resid2",
+  "variant": "nhmc_resid2",
+  "use_z2": true,
+  "kappa_cond": "explicit",
+  "L": 8,
+  "lam": 0.022,
+  "kappa_min": 0.27,
+  "kappa_max": 0.27,
+  "num_steps": 16,
+  "n_leapfrog": 5,
+  "batch_size": 48,
+  "epochs": 20000,
+  "embed_dim": 128,
+  "channels": [
+    32,
+    32
+  ],
+  "train_script": "train_cond_phi4_kappa_explicit.py",
+  "buffer": {
+    "on": true,
+    "start": 1000,
+    "chains": 64,
+    "every": 2,
+    "burn": 20,
+    "size": 20000,
+    "weight": 1.0
+  },
+  "fixed_pflip": 0.5,
+  "seed": 0,
+  "odd_nets": true,
+  "loss": "kl",
+  "var_weight": 0.01
+}

@@ -1,0 +1,13 @@
+# name L T s-list ckpt   (s = 3T/4: d = T/4; s = T-4: d = 4; both = 12 at T = 16; T = 4 has only d = 1)
+nat_L4_T16 4 16 12 kernel_final.pt
+nat_L8_T16 8 16 12 kernel_final.pt
+nat_L12_T16 12 16 12 kernel_final.pt
+nat_L16_T16 16 16 12 kernel_final.pt
+ks_L8_T4 8 4 3 kernel_final.pt
+ks_L8_T8 8 8 6,4 kernel_final.pt
+ks_L8_T16 8 16 12 kernel_final.pt
+ks_L8_T32 8 32 24,28 kernel_final.pt
+ks_L8_T64 8 64 48,60 best.pt
+ks_L16_T8 16 8 6,4 kernel_final.pt
+ks_L16_T32 16 32 24,28 kernel_final.pt
+ks_L16_T64 16 64 48,60 kernel_final.pt
