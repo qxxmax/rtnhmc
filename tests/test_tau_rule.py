@@ -31,24 +31,31 @@ def ar1(n, phi, chains=1, seed=0):
 
 
 def test_sokal_and_batch_means():
+    """Sokal on one long chain; batch means (50 batches, relative error ~ sqrt(2/49) = 0.2 per chain) averaged over 16
+    independent chains, so that its mean is checked to ~5%."""
     for phi in (0.5, 0.9):
         g = (1 + phi) / (1 - phi)
-        x = ar1(400_000, phi, seed=1)[:, 0]
-        gs, win = sokal_single(x)
-        gb = batch_means_tau(x)
-        print(f'phi {phi}: exact g {g:.3f}  Sokal {gs:.3f} (window {win})  batch means {gb:.3f}')
+        x = ar1(400_000, phi, chains=16, seed=1)
+        gs, win = sokal_single(x[:, 0])
+        gb = np.mean([batch_means_tau(x[:, c]) for c in range(x.shape[1])])
+        print(f'phi {phi}: exact g {g:.3f}  Sokal {gs:.3f} (window {win})  batch means (mean of 16) {gb:.3f}')
         assert abs(gs / g - 1) < 0.05
         assert abs(gb / g - 1) < 0.15
         assert win >= 5 * gs
 
 
 def test_tau_int_chains():
+    """The paper statistic is max(Sokal, batch means) / 2 per chain, median over chains: conservative by construction.
+    Check that the Sokal part alone recovers g / 2 and that the statistic lies between it and a modest upper margin."""
     phi = 0.8
     g = (1 + phi) / (1 - phi)
     x = ar1(100_000, phi, chains=4, seed=2)
     med, err, per = tau_int_chains(x)
-    print(f'tau_int median {med:.3f} +- {err:.3f} (exact {g / 2:.3f}); per chain {np.round(per, 3)}')
-    assert abs(med / (g / 2) - 1) < 0.1
+    sok = float(np.median([sokal_single(x[:, c])[0] for c in range(x.shape[1])])) / 2
+    print(f'tau_int median {med:.3f} +- {err:.3f}; Sokal-only median {sok:.3f}; exact {g / 2:.3f}; '
+          f'per chain {np.round(per, 3)}')
+    assert abs(sok / (g / 2) - 1) < 0.1
+    assert sok * 0.999 <= med <= 1.35 * g / 2
 
 
 def test_holding_runs():

@@ -68,7 +68,7 @@ torch.backends.cuda.matmul.allow_tf32 = False
 
 MODEL_DIR, CKPT, KAPPA = "model", "kernel_final.pt", 0.27
 if not os.path.exists(os.path.join(MODEL_DIR, CKPT)):
-    raise SystemExit("model/kernel_final.pt is missing: see model/README.md (download from the Zenodo record)")
+    raise SystemExit("model/kernel_final.pt is missing: see model/README.md")
 k, cfg = kernels.load_model(MODEL_DIR, CKPT, torch.device(DEV))
 k_cpu, _ = kernels.load_model(MODEL_DIR, CKPT, torch.device("cpu"))   # the sigma^2 estimator runs on the CPU
 T, L, LAM = cfg["num_steps"], cfg["L"], cfg["lam"]

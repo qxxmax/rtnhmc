@@ -206,7 +206,8 @@ Dropped as unused by any paper script: `cond_kernels` classes `CondGeneralizedKe
 | `code/baselines/lj13/lj13_compare.py` | `revision/lj13/lj13_compare.py` | modified | `191595e9bea3db934590a3b43c5a9af7f45c54a68dc6471d5986d691d7572485` |
 | `code/baselines/lj13/lj13_hmc.py` | `revision/lj13/lj13_hmc.py` | modified | `d95a06fe63c3e1694947d06375d46d9430a9fabdb7c5b2ec6bd3d2c668d6282d` |
 | `code/baselines/lj13/lj13_pt_reference.py` | `revision/lj13/lj13_pt_reference.py` | modified | `c977b2010b81f912e586399a5fc0072e9a10f115a7aa1f8122222d72f539cea7` |
-| `code/baselines/lj13/train_lj_rtbuf.py` | `lj_buffer/train_lj_rtbuf.py` | verbatim | `0181f030bd0c41b7d769e685a99e57c8c990b16702f9c0a29a8bd51f76095662` |
+| `code/baselines/lj13/train_lj_rtbuf.py` | iqcb-02 `/media/scratch/mqian/lj_buffer/code_rtlocal/train_lj_rtbuf.py` (the version the cluster runs used; the Mac copy 0181f030 is the older code_bak_20261012) | verbatim | `447ec47322b3…` |
+| `code/baselines/lj13/particle/ce_stage.py` | iqcb-02 `/media/scratch/mqian/lj_buffer/code_rtlocal/ce_stage.py` | verbatim | `3eb2aabee45b…` |
 | `code/baselines/lj13/particle/equiv_drift.py` | `particle/code/equiv_drift.py` | verbatim | `622dbf10dcbe0343b6948fc8699e117aa65ca0775532640b9cd04b4bbc51d33b` |
 | `code/baselines/lj13/particle/eval_lj_cluster_nhmc.py` | `particle/code/eval_lj_cluster_nhmc.py` | verbatim | `fb04cfb04554bfe4a82eb0d60dcf8ca8e0f803c8bd4eca007a8a955cd78f8148` |
 | `code/baselines/lj13/particle/lj13_chain_diagnostics.py` | `particle/code/lj13_chain_diagnostics.py` | verbatim | `d90b9692ef9f571a880a39cd824852ad0fd8509936f7d367c0e545b1dd06727a` |
@@ -284,3 +285,20 @@ Dropped as unused by any paper script: `cond_kernels` classes `CondGeneralizedKe
 | `code/tasks/analysis_cluster/item4_eq_w2_him.py` | `results_sync/revision/unify_20261118/item4_eq_w2_him.py` | verbatim | `7375bfdc177f1e4bad3e34b14de00aea7624278f5e26775a5589fd61560c9e9b` |
 | `code/tasks/analysis_cluster/jk_cells_remote.py` | `results_sync/revision/jackknife_20261117/cluster/jk_cells_remote.py` | verbatim | `9bc9697d013ceed3a4b48290d57a759781deceb0c8179a87d3005c2f49727803` |
 | `tests/l2_exact.py` | `revision/cmcd_torch/tests/l2_exact.py` | verbatim | `ae1e119f91cbef55351ee8fe198c4df0384bd0701528fb88bc95f26ebe2e80ad` |
+
+## Notes from the HIM equivalence test (2026-11-20, jobs 94801, 94807)
+- All original-vs-repo comparisons bitwise identical (training, chains, free energy, forward evaluation, CMCD/DBS, DW, LJ13, TI).
+- The cluster copies of `logz_estimators.py` (HIM, iqcb revision_code) are the pre-2026-11-10 v1 (swapped bridge weights); every
+  paper BAR number was computed with the Mac v2 (EST_VERSION = 2, checked in the figure caches and udb_bar_summary.json), which is the
+  version shipped here.
+- iqcb `longchain.py` lacks `--pregen-wait` and walks pregen shards in a different order (chain values unchanged); HIM copy = Mac copy.
+
+## Test rerun (2026-11-20, jobs 94845, 94846, 94851)
+- `tests/test_tau_rule.py`: 5/5 pass (BM over 16 AR(1) chains; Sokal-only median within 10 % of g/2).
+- `tests/test_reversibility.py`: the chain test now starts from exact draws (rejection on the quadrature box, path-IMH record
+  from a reverse path); from forward-path starts the random kernel (path-IMH acceptance 0.01-0.04) does not equilibrate
+  within the test length. 5/5 pass: exact draws max|z| 0.38; path-IMH 1.38, RT 0.73, pRT 2.03; no-MH control |z| 6614.
+- `code/baselines/hmc_z2/phi4_hmc_z2.py`: `revision/phi4/phi4_hmc_z2.py` with `observables`, `summarise`, `KEYS` copied
+  verbatim from `revision/phi4/phi4_compare.py` and the imports pointed at `code/`; output JSON identical to the original
+  (L = 4, kappa = 0.27, 2 runs, same seed; timing fields excluded).
+- Notebook with the bundled `model/kernel_final.pt` (MD5 9f68f751...): executed, 490 s on 4 cores.

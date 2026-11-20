@@ -14,6 +14,9 @@ RT-BUFFER VARIANT (2026-10-10, phi4_bench/lj_buffer): copy of lj13_seeds/code/tr
     each step adds the forward-KL term  -E[W_rev] + var_weight Var(W_rev)  of reverse records generated
     from buffer states with the CURRENT parameters (reparametrised, no stale weights; not the FAB/SNIS or
     high-weight path-replay buffers below). Training only; evaluation never sees the buffer.
+  * --system dw4 (with NHMC_NSPACE=2): DW-4 benchmark target; --eps_max: leapfrog step clamp (2026-10-12).
+  * --ce_weight > 0: stage-wise candidate CE for the forward momentum law (ce_stage.py), added to
+    work_weight x (work loss); force evaluations of every term are counted (summary force_evals_total).
   * exact periodic checkpoint last.pt (weights, Adam, LR schedule, RNG, chains, buffer, counters) every
     --ckpt_minutes, resumed automatically when present.
 
@@ -35,8 +38,10 @@ import torch
 import torch.nn as nn
 
 from lj13_nhmc import (LJClusterTarget, LJ13NHMCKernel, rollout, remove_mean,
-                       ess_logz, DIM, N_PART, N_SPACE, base_log_prob_scaled)
+                       ess_logz, DIM, N_PART, N_SPACE, base_log_prob_scaled, R2_FLOOR)
 from lj13_chain_diagnostics import reverse_path, forward_path
+from particle_targets import make_target
+from ce_stage import stage_ce_loss, snis_inverse_ce
 
 
 @torch.no_grad()
@@ -300,8 +305,90 @@ def multi_pool_validation(kernel, target, args, dev):
     }
 
 
+def softcore_bridge_force(target, x, beta, alpha):
+    """beta * F_sc(x): LJ with r^2 -> r^2 + alpha (1 - beta) (alpha=0: exact LJ force) + oscillator."""
+    p, diff, r2 = target._pair(x)
+    n = target.n_particles
+    eye = torch.eye(n, device=x.device, dtype=torch.bool)
+    r2 = (r2 + alpha * (1.0 - beta)[:, None, None]).masked_fill(eye[None], float('inf'))
+    r2 = r2.clamp_min(R2_FLOOR * target.rm ** 2)
+    inv2 = target.rm ** 2 / r2
+    inv6 = inv2 ** 3
+    g = 24.0 * target.eps * target.lj_scale * (inv6 * inv6 - inv6) / r2
+    f = (g[..., None] * diff).sum(2) - target.osc_scale * (p - p.mean(1, keepdim=True))
+    return beta[:, None] * f.reshape(x.shape) / target.temperature
+
+
+def drift_pretrain_loss(kernel, target, args, dev):
+    """Huber regression of b_phi(x, beta) on beta * F_sc(x) at on-policy path states (DAgger-style: the
+    states come from the current, partially trained sampler)."""
+    T = args.num_steps
+    n_paths = max(1, args.pretrain_states // T)
+    with torch.no_grad():
+        x, _, _, _, _ = kernel.sample_base(n_paths, dev, torch.float32)
+        xs, bs = [], []
+        for t in range(1, T + 1):
+            tn = torch.full((n_paths,), t / T, device=dev)
+            mu, ls = kernel._momentum_params(x, tn, reverse=False)
+            p0 = mu + torch.exp(ls) * torch.randn_like(mu)
+            b = float(kernel._beta(t, T))
+            xs.append(x); bs.append(torch.full((n_paths,), b, device=dev))
+            x, _ = kernel._leapfrog(x, p0, kernel.epsilon_at(t, T), b)
+        X, Bt = torch.cat(xs), torch.cat(bs)
+        ok = torch.isfinite(X).all(1)
+        X, Bt = X[ok], Bt[ok]
+        tgt = softcore_bridge_force(target, X, Bt, args.pretrain_softcore).clamp(-args.drift_clamp, args.drift_clamp)
+        _, _, r2 = target._pair(X[-n_paths:])
+        r2 = r2 + torch.eye(target.n_particles, device=dev)[None] * 1e9
+        min_d = r2.amin((1, 2)).sqrt().median()
+    pred = torch.cat([kernel._drift(X[i:i + 1024], Bt[i:i + 1024]) for i in range(0, X.shape[0], 1024)])
+    loss = nn.functional.huber_loss(pred, tgt, delta=10.0)
+    with torch.no_grad():
+        rel = float((pred - tgt).norm() / tgt.norm().clamp_min(1e-9))
+        tn = tgt.view(tgt.shape[0], -1).norm(dim=1)
+    return loss, dict(rel_err=rel, tgt_med=float(tn.median()), tgt_max=float(tn.max()),
+                      min_dist_med=float(min_d), force_evals=int(X.shape[0]))
+
+
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument('--system', choices=['lj', 'dw4'], default='lj')
+    p.add_argument('--eps_max', type=float, default=1e-2, help='upper clamp of the leapfrog step')
+    p.add_argument('--work_weight', type=float, default=1.0, help='weight of the on-policy work loss')
+    p.add_argument('--ce_weight', type=float, default=0.0, help='stage-wise candidate CE weight (0 = off)')
+    p.add_argument('--ce_K', type=int, default=16)
+    p.add_argument('--ce_bridges', type=int, default=32, help='CE bridges per accumulation step')
+    p.add_argument('--ce_label_beta', type=float, default=1.0, help='label tempering t ~ exp(beta log t)')
+    p.add_argument('--ce_var_weight', type=float, default=0.0, help='within-set stage log-variance weight')
+    p.add_argument('--ce_start', type=int, default=1)
+    p.add_argument('--drift_pair', type=int, default=0, help='add unbounded radial pair term to the learned drift')
+    p.add_argument('--drift_clamp', type=float, default=20.0, help='per-component bound of the learned drift')
+    p.add_argument('--softcore_alpha', type=float, default=0.0,
+                   help='soft-core bridge force: LJ r^2 -> r^2 + alpha (1-beta)^power in the leapfrog (weights stay exact)')
+    p.add_argument('--softcore_power', type=float, default=1.0)
+    p.add_argument('--softcore_learn', type=int, default=0, help='learned core width: number of beta knots (0 = fixed)')
+    p.add_argument('--drift_pretrain', type=int, default=0,
+                   help='first N epochs: regress the learned drift on the (soft-core) bridge force at on-policy '
+                        'path states (training-time force only; sampling stays force-free)')
+    p.add_argument('--pretrain_softcore', type=float, default=0.0,
+                   help='soft-core alpha for the regression target: r^2 -> r^2 + alpha (1 - beta)')
+    p.add_argument('--pretrain_states', type=int, default=4096, help='states per pretraining step')
+    p.add_argument('--init_from', default='', help='kernel state_dict to start from (e.g. a trained kernel_final.pt)')
+    p.add_argument('--train_only', choices=['all', 'fwd_law'], default='all',
+                   help="fwd_law: Candidate-CE protocol - freeze map (eps, base, drift) and reverse law, train forward law only")
+    p.add_argument('--drift', choices=['exact', 'learned', 'exact+learned'], default='exact',
+                   help='leapfrog kick: exact bridge force / learned equivariant drift (no target force) / both')
+    p.add_argument('--law_force_input', type=int, default=1, help='0: momentum laws never call target.force')
+    p.add_argument('--drift_hidden', type=int, default=64)
+    p.add_argument('--drift_layers', type=int, default=3)
+    p.add_argument('--drift_arch', choices=['egnn', 'painn', 'mace'], default='egnn',
+                   help='backbone of the learned drift (mace needs e3nn + mace-torch on PYTHONPATH)')
+    p.add_argument('--drift_lmax', type=int, default=2, help='MACE drift: max l of the edge spherical harmonics')
+    p.add_argument('--drift_corr', type=int, default=3, help='MACE drift: body-order correlation')
+    p.add_argument('--snis_inv_weight', type=float, default=0.0,
+                   help='self-normalised inverse-map likelihood (needs --momentum_mode forward_only)')
+    p.add_argument('--snis_inv_batch', type=int, default=256)
+    p.add_argument('--soft_sigma', type=int, default=0, help='smooth clamp of the momentum-law log sigma')
     p.add_argument('--n_particles', type=int, default=N_PART)
     p.add_argument('--temperature', type=float, default=1.0)
     p.add_argument('--osc_scale', type=float, default=1.0)
@@ -412,12 +499,9 @@ def main():
     torch.manual_seed(args.seed)
     os.makedirs(args.save_dir, exist_ok=True)
 
-    target = LJClusterTarget(
-        n_particles=args.n_particles,
-        temperature=args.temperature,
-        osc_scale=args.osc_scale,
-        lj_scale=args.lj_scale,
-    )
+    if args.system == 'dw4':
+        args.n_particles = 4
+    target = make_target(args)
     dim = target.dim
     kernel = LJ13NHMCKernel(target, n_leapfrog=args.n_leapfrog, hidden=args.hidden,
                             log_eps_init=args.log_eps_init,
@@ -450,17 +534,36 @@ def main():
                             momentum_refresh_alpha=args.momentum_refresh_alpha,
                             learn_mass=bool(args.learn_mass),
                             mass_init=args.mass_init,
-                            momentum_mode=args.momentum_mode).to(dev)
+                            momentum_mode=args.momentum_mode, eps_max=args.eps_max,
+                            drift=args.drift, law_force_input=bool(args.law_force_input),
+                            drift_hidden=args.drift_hidden, drift_layers=args.drift_layers,
+                            drift_arch=args.drift_arch, drift_lmax=args.drift_lmax, drift_corr=args.drift_corr,
+                            drift_pair=bool(args.drift_pair), drift_clamp=args.drift_clamp,
+                            softcore_alpha=args.softcore_alpha, softcore_power=args.softcore_power,
+                            softcore_learn=args.softcore_learn,
+                            soft_sigma=bool(args.soft_sigma)).to(dev)
     if args.replay_capacity > 0 and args.base_type != 'gaussian':
         raise ValueError("path-noise replay currently requires --base_type gaussian")
     if args.snis_buffer_capacity > 0 and args.base_type != 'gaussian':
         raise ValueError("the SNIS path buffer currently requires --base_type gaussian")
     n_params = sum(q.numel() for q in kernel.parameters())
+    fpp = kernel.force_calls_per_path(args.num_steps)      # TRUE target-force calls per path
     print(f"LJ-{args.n_particles}  dim={dim}  steps={args.num_steps}  n_lf={args.n_leapfrog}  "
           f"arch={args.architecture}  hidden={args.hidden}  batch={args.batch_size}  "
           f"params={n_params:,}  dev={dev}")
 
-    opt = torch.optim.Adam(kernel.parameters(), lr=args.lr)
+    if args.init_from:
+        kernel.load_state_dict(torch.load(args.init_from, map_location=dev, weights_only=False))
+        print(f"init from {args.init_from}", flush=True)
+    if args.train_only == 'fwd_law':
+        for name, q in kernel.named_parameters():
+            q.requires_grad_(name.startswith(('fwd_law.', 'fwd_mu.', 'fwd_logsig.')))
+    train_params = [q for q in kernel.parameters() if q.requires_grad]
+    print(f"trainable params={sum(q.numel() for q in train_params):,} ({args.train_only})", flush=True)
+    core = [q for n_, q in kernel.named_parameters() if n_ == 'softcore_knots' and q.requires_grad]
+    rest = [q for q in train_params if all(q is not c for c in core)]
+    # the few core-width knots get 10x lr (otherwise they move <1 in log-width over a run)
+    opt = torch.optim.Adam([{'params': rest}] + ([{'params': core, 'lr': 10 * args.lr}] if core else []), lr=args.lr)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs,
                                                        eta_min=args.target_lr)
     cfg = vars(args).copy(); cfg['n_params'] = n_params
@@ -486,9 +589,9 @@ def main():
         rt = st['rt']
         if rt['chains'] is not None:
             rt['chains'], rt['buf'] = rt['chains'].to(dev), rt['buf'].to(dev)
-        torch.set_rng_state(st['rng'])
+        torch.set_rng_state(st['rng'].cpu())
         if st.get('rng_cuda') is not None and torch.cuda.is_available():
-            torch.cuda.set_rng_state_all(st['rng_cuda'])
+            torch.cuda.set_rng_state_all([s.cpu() for s in st['rng_cuda']])
         start_ep, wall0 = st['ep'] + 1, st['wall']
         print(f"EXACT RESUME from {last_path} at epoch {st['ep']}", flush=True)
     t0 = time.time() - wall0
@@ -507,6 +610,19 @@ def main():
     for ep in range(start_ep, args.epochs + 1):
         kernel.train()
         opt.zero_grad()
+        if ep <= args.drift_pretrain:
+            pl, pst = drift_pretrain_loss(kernel, target, args, dev)
+            pl.backward()
+            nn.utils.clip_grad_norm_(kernel.parameters(), 5.0)
+            opt.step(); sched.step()
+            rt['fe'] = rt.get('fe', 0) + pst['force_evals']
+            if ep % args.log_interval == 0:
+                print(f"[{ep:5d}/{args.epochs}] PRETRAIN drift  huber={float(pl):.4g}  "
+                      f"rel_err={pst['rel_err']:.3f}  |target| med={pst['tgt_med']:.3g} max={pst['tgt_max']:.3g}  "
+                      f"min-dist med={pst['min_dist_med']:.3f}  fe={rt['fe']:.3e}", flush=True)
+            if time.time() - t_ck >= args.ckpt_minutes * 60:
+                save_last(ep); t_ck = time.time()
+            continue
         losses, means, stds, replay_penalties = [], [], [], []
         stage_penalties, buffer_penalties = [], []
         valid_update = True
@@ -514,7 +630,8 @@ def main():
             capture_noise = (args.replay_capacity > 0
                              or args.snis_buffer_capacity > 0)
             capture_stages = args.stage_var_weight > 0
-            fresh_output = rollout(
+            with torch.set_grad_enabled(args.work_weight > 0):     # work_weight 0: no pathwise graph
+              fresh_output = rollout(
                 kernel, target, args.batch_size, args.num_steps, dev,
                 base_scale=args.base_scale, return_trace_noise=capture_noise,
                 return_stage_increments=capture_stages,
@@ -534,8 +651,20 @@ def main():
                 med = W.median()
             Wc = W.clamp(med - args.clamp_window, med + args.clamp_window)
             ess_penalty = logmeanexp(-2.0 * Wc) - 2.0 * logmeanexp(-Wc)
-            loss = (Wc.mean() + args.var_weight * Wc.var()
-                    + args.ess_weight * ess_penalty)
+            loss = args.work_weight * (Wc.mean() + args.var_weight * Wc.var()
+                                       + args.ess_weight * ess_penalty)
+            rt['fe'] = rt.get('fe', 0) + args.batch_size * fpp * (args.work_weight > 0)
+            if args.snis_inv_weight > 0:
+                si_loss, si_st = snis_inverse_ce(kernel, target, args.snis_inv_batch, args.num_steps, dev)
+                loss = loss + args.snis_inv_weight * si_loss
+                rt['fe'] += args.snis_inv_batch * fpp
+                rt['ce_last'] = dict(si_st, snis_inv_loss=float(si_loss.detach()))
+            if args.ce_weight > 0 and ep >= args.ce_start:
+                ce_loss, ce_st = stage_ce_loss(kernel, target, args.ce_bridges, args.ce_K, args.num_steps, dev,
+                                               label_beta=args.ce_label_beta, var_weight=args.ce_var_weight)
+                loss = loss + args.ce_weight * ce_loss
+                rt['fe'] += ce_st['ce_force_evals']
+                rt['ce_last'] = dict(ce_st, ce_loss=float(ce_loss.detach()))
 
             stage_penalty_value = 0.0
             if capture_stages:
@@ -596,15 +725,18 @@ def main():
                             xc, _ = rt_step(kernel, target, xc, args.num_steps)
                     rt['chains'], rt['buf'] = xc, xc.clone()
                     rt['n_rt_paths'] += args.rt_chains * (1 + 2 * args.rt_burn)
+                    rt['fe'] = rt.get('fe', 0) + args.rt_chains * (1 + 2 * args.rt_burn) * fpp
                 if ep % args.rt_every == 0:
                     rt['chains'], acc_ = rt_step(kernel, target, rt['chains'], args.num_steps)
                     rt['buf'] = torch.cat([rt['buf'], rt['chains']])[-args.rt_size:]
                     rt['acc'] = float(acc_.float().mean())
                     rt['n_rt_paths'] += 2 * args.rt_chains
+                    rt['fe'] = rt.get('fe', 0) + 2 * args.rt_chains * fpp
                 xb = rt['buf'][torch.randint(rt['buf'].size(0), (args.rt_batch,), device=rt['buf'].device)]
                 Wr = reverse_record_work(kernel, target, xb, args.num_steps)
                 Wr = Wr[torch.isfinite(Wr)]
                 rt['n_rt_paths'] += args.rt_batch
+                rt['fe'] = rt.get('fe', 0) + args.rt_batch * fpp
                 if Wr.numel() >= 2:
                     with torch.no_grad():
                         mr = Wr.median()
@@ -651,7 +783,7 @@ def main():
                     buffer_penalty_value = float(buffer_penalty.detach())
                 snis_buffer.update(buffer_indices, buffer_work_all)
 
-            if not torch.isfinite(loss):
+            if not torch.isfinite(loss) or not loss.requires_grad:
                 valid_update = False
                 break
             (loss / args.grad_accum).backward()
@@ -690,6 +822,7 @@ def main():
                     f" template={float(kernel.structured_base.template_scale.detach()):.3f}"
                 )
             eps = kernel.epsilon.detach().flatten()
+            ce_text = (" ".join(f"{k}={v:.4g}" for k, v in rt['ce_last'].items()) + "  ") if 'ce_last' in rt else ""
             eps_text = (f"{float(eps.item()):.5f}" if eps.numel() == 1 else
                         f"{float(eps.min()):.5f}/{float(eps.median()):.5f}/{float(eps.max()):.5f}")
             print(f"[{ep:5d}/{args.epochs}] loss={loss_value:10.2f}  "
@@ -701,7 +834,7 @@ def main():
                   f"buffer={len(snis_buffer)}/{args.snis_buffer_capacity}  "
                   f"buffer_loss={buffer_penalty_value:.4f}  "
                   f"rt_buf={0 if rt['buf'] is None else rt['buf'].size(0)} rt_acc={rt['acc']:.3f} "
-                  f"rt_paths={rt['n_rt_paths']}  "
+                  f"rt_paths={rt['n_rt_paths']}  fe={rt.get('fe', 0):.3e}  {ce_text}"
                   f"lr={opt.param_groups[0]['lr']:.1e}", flush=True)
 
         if ep % args.eval_interval == 0:
@@ -742,6 +875,7 @@ def main():
         json.dump({'best_ess': best_ess,
                    'best_selection_score': best_selection_score,
                    'wall_sec': wall, 'rt_paths_total': rt['n_rt_paths'],
+                   'force_evals_total': rt.get('fe', 0),
                    'train_paths_total': args.epochs * args.batch_size * args.grad_accum, **cfg}, f, indent=2)
     print(f"done  best_median_ess={best_ess*100:.2f}%  "
           f"best_worst_pool_ess={best_selection_score*100:.2f}%  "

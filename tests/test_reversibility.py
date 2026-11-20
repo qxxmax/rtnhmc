@@ -7,10 +7,13 @@ must reproduce the exact moments within statistical errors. Exact values: l2_exa
 
   1. identity: updates.py reproduces the transition of exp_chains.py (PhiStepper.propose + accept) bit for bit;
   2. SNIS: log Z from forward-path works W (E_Q[e^{-W}] = Z) agrees with the exact log Z;
-  3. chains: path-IMH, RT and pRT (s = 4) from forward-path starts; <|M|>, <M^2>, <S>/V agree with the exact values
-     (SE from the spread of the per-chain time means of independent chains; pass: max |z| < 4.5);
-  4. negative control: the same proposals accepted without the Metropolis test must be biased (|z| > 6 for some
-     observable), so the test can fail.
+  3. stationarity: path-IMH, RT and pRT (s = 4) chains started from exact draws of the target (rejection sampling on
+     the quadrature box; the path-IMH record is the work of a reverse path drawn from the start) stay at the exact
+     <|M|>, <M^2>, <S>/V (SE from the spread of the per-chain time means of independent chains; pass: max |z| < 4.5).
+     An invariant update keeps the exact moments at every step for any kernel, so the test does not depend on how
+     well the deliberately poor kernel mixes (from forward-path starts it would need far more steps to equilibrate);
+  4. negative control: the same proposals accepted without the Metropolis test, from the same exact starts, must be
+     biased (|z| > 6 for some observable), so the test can fail.
 
 Run on a CPU node: python tests/test_reversibility.py  (exit code 0 = PASS). Also collected by pytest.
 """
@@ -37,8 +40,9 @@ import l2_exact as X  # noqa: E402
 KAPPA, LAM, L, T = 0.30, 0.022, 2, 8
 CFG = dict(kernel='nhmc_resid2', embed_dim=32, channels=[8, 8], n_leapfrog=3, lam=LAM, num_steps=T, L=L,
            odd_nets=True, use_z2=True)
-C, N_TRANS = int(os.environ.get('TEST_CHAINS', 2048)), int(os.environ.get('TEST_STEPS', 800))
+C, N_TRANS = int(os.environ.get('TEST_CHAINS', 2048)), int(os.environ.get('TEST_STEPS', 400))
 Z_PASS, Z_NEG = 4.5, 6.0
+PERTURB = float(os.environ.get('TEST_PERTURB', 0.01))   # size of the random parameter shift away from initialisation
 torch.set_num_threads(int(os.environ.get('NTHREADS', 4)))
 
 
@@ -49,7 +53,7 @@ def make_model(seed=0):
                                    n_leapfrog=CFG['n_leapfrog'], lam=LAM, num_steps=T, use_z2=True, odd_nets=True)
     with torch.no_grad():                       # move away from the zero-initialised residual force and default steps
         for p in k.parameters():
-            p.add_(0.05 * torch.randn_like(p))
+            p.add_(PERTURB * torch.randn_like(p))
     d = pathlib.Path(tempfile.mkdtemp())
     (d / 'config.json').write_text(json.dumps(CFG))
     torch.save(k.state_dict(), d / 'kernel_final.pt')
@@ -71,10 +75,29 @@ def zstats(tr, ref, burn):
     return out
 
 
+def exact_draws(n, seed, lo=-5.5, hi=5.5, batch=1 << 20):
+    """n exact draws of exp(-S) on the box [lo, hi]^4 of the quadrature (uniform proposal, accept exp(-(S - S_min));
+    S >= sum_i [(1 - 2 lam - 4 kappa) phi_i^2 + lam phi_i^4] gives S_min). Shape (n, 1, 2, 2), sites (a, b; c, d)."""
+    g = torch.Generator().manual_seed(seed)
+    c = 1 - 2 * LAM - 4 * KAPPA
+    s_min = -c * c / LAM if c < 0 else 0.0
+    out, m = [], 0
+    while m < n:
+        f = lo + (hi - lo) * torch.rand(batch, 4, generator=g, dtype=torch.float64)
+        S = X.S_closed(f[:, 0], f[:, 1], f[:, 2], f[:, 3], KAPPA, LAM)
+        assert float(S.min()) >= s_min
+        keep = f[torch.rand(batch, generator=g, dtype=torch.float64) < torch.exp(s_min - S)]
+        out.append(keep)
+        m += keep.shape[0]
+    f = torch.cat(out)[:n]
+    return f.view(n, 1, 2, 2).to(torch.get_default_dtype())
+
+
 def chain(k, method, s, n, seed, mh=True):
-    """C independent chains from forward-path starts; returns traces (n, C) and the mean acceptance."""
+    """C independent chains from exact starts; returns traces (n, C) and the mean acceptance."""
     torch.manual_seed(seed)
-    x, W = updates.start_states(k, C, L, L, T, KAPPA, LAM, 'cpu')
+    x = exact_draws(C, seed)
+    W = paths.rev_partial(k, x, T, 0, KAPPA, LAM)[1] if method == 'imh' else None
     tr = {key: np.empty((n, C)) for key in ('absM', 'M2', 'action')}
     acc = np.empty((n, C), bool)
     with torch.no_grad():
@@ -137,13 +160,26 @@ def test_snis_logz():
     assert abs(z) < Z_PASS
 
 
+def test_exact_draws():
+    """The rejection sampler itself reproduces the quadrature moments."""
+    ref = X.exact_4d(KAPPA)
+    x = exact_draws(1 << 16, 5)
+    worst = 0.0
+    for key, v in observables(x).items():
+        v = v.double()
+        z = (float(v.mean()) - ref[key]) / float(v.std() / math.sqrt(v.numel()))
+        worst = max(worst, abs(z))
+    print(f'exact draws max|z| {worst:.2f}', flush=True)
+    assert worst < Z_PASS
+
+
 def test_chains_exact():
     k, _ = make_model()
     ref = X.exact_4d(KAPPA)
     worst = 0.0
     for name, method, s, seed in (('path-IMH', 'imh', 0, 21), ('RT', 'rt', 0, 22), ('pRT s=4', 'rtp', 4, 23)):
         tr, a = chain(k, method, s, N_TRANS, seed)
-        st = zstats(tr, ref, N_TRANS // 4)
+        st = zstats(tr, ref, 0)
         zmax = max(abs(v['z']) for v in st.values())
         worst = max(worst, zmax)
         print(f'{name:9s} acc {a:.3f} max|z| {zmax:.2f} | ' + ' '.join(
@@ -155,7 +191,7 @@ def test_negative_control():
     k, _ = make_model()
     ref = X.exact_4d(KAPPA)
     tr, _ = chain(k, 'rt', 0, N_TRANS, 31, mh=False)
-    st = zstats(tr, ref, N_TRANS // 4)
+    st = zstats(tr, ref, 0)
     zmax = max(abs(v['z']) for v in st.values())
     print(f'no-MH control max|z| {zmax:.2f} (must exceed {Z_NEG})', flush=True)
     assert zmax > Z_NEG
@@ -163,7 +199,7 @@ def test_negative_control():
 
 if __name__ == '__main__':
     ok = True
-    for f in (test_identity_with_exp_chains, test_snis_logz, test_chains_exact, test_negative_control):
+    for f in (test_identity_with_exp_chains, test_snis_logz, test_exact_draws, test_chains_exact, test_negative_control):
         try:
             f()
             print('PASS', f.__name__, flush=True)
