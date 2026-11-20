@@ -70,7 +70,7 @@ jupyter lab rtnhmc_demo.ipynb
 | `code/METHODS.md` | modelling and analysis conventions (τ_int rule, burn-in, convergence criterion, jackknife, force-evaluation counts, estimators) |
 | `figures/` | the final figure and table scripts, in the directory layout of the Zenodo record; style in `figs_20261117u/nhmc_style.py`; `zenodo_20261118/` holds the redraw tools and table scripts |
 | `results/` | small summaries: σ_s² with jackknife for the seven native models (`sigma2_jackknife/`), the long chains and forward evaluation of the notebook model, HMC / Wolff τ grids and log Z references, scaling-fit jackknife (`fits_jk_buf.json`), log Z statistics of the free-energy figure, timing results |
-| `model/` | configuration and logs of the notebook model; weights from Zenodo |
+| `model/` | the notebook model: weights (`kernel_final.pt`, 0.6 MB), configuration and training logs |
 | `tests/` | `test_reversibility.py` (path-IMH, RT and pRT started from exact draws of the L = 2 lattice keep the quadrature moments for a deliberately poor kernel; negative control without the Metropolis test), `test_tau_rule.py` (τ_int rule on AR(1) chains) |
 
 ## Reproducing the full pipeline
